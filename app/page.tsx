@@ -108,7 +108,30 @@ export default function Home() {
     }, {});
   }
 
-  function findingMode() {}
+  function findingMode(age: any) {
+    age = age.slice().sort((x: any, y: any) => x - y);
+
+    var bestStreak = 1;
+    var bestElem = age[0];
+    var currentStreak = 1;
+    var currentElem = age[0];
+
+    for (let i = 1; i < age.length; i++) {
+      if (age[i - 1] !== age[i]) {
+        if (currentStreak > bestStreak) {
+          bestStreak = currentStreak;
+          bestElem = currentElem;
+        }
+
+        currentStreak = 0;
+        currentElem = age[i];
+      }
+
+      currentStreak++;
+    }
+
+    return currentStreak > bestStreak ? currentElem : bestElem;
+  }
 
   function summaryBy(objectArray: Users, objProp: any) {
     const maleCount = objectArray.filter(
@@ -126,13 +149,20 @@ export default function Home() {
       return prev && prev.age < current.age ? prev : current;
     });
 
-    const hairGroup = groupBy(objectArray, "hair", "color");
+    const initialAge: number[] = [];
+    objectArray.map((item) => initialAge.push(item.age));
 
-    let hairObj = Object.keys(hairGroup).map((item) => {
-      return { [item]: hairGroup[item].length };
-    });
+    console.log(initialAge);
 
-    console.log(hairObj, "xxx");
+    const modeAge = findingMode(initialAge);
+
+    // const hairGroup = groupBy(objectArray, "hair", "color");
+
+    // let hairObj = Object.keys(hairGroup).map((item) => {
+    //   return { [item]: hairGroup[item].length };
+    // });
+
+    // console.log(hairObj, "xxx");
 
     // var total = 0;
     // for (var i = 0; i < objectArray.length; i++) {
@@ -144,6 +174,7 @@ export default function Home() {
       male: maleCount,
       female: femaleCount,
       ageRange: `${min.age}-${max.age}`,
+      ageMode: modeAge,
     };
 
     console.log(dataSummary);
