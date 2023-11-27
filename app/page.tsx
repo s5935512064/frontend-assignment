@@ -1,113 +1,334 @@
-import Image from 'next/image'
+"use client";
+import React, { useEffect, useState } from "react";
+import Image from "next/image";
+import axios from "axios";
+
+interface Item {
+  type: string;
+  name: string;
+}
+
+const data = [
+  {
+    type: "Fruit",
+    name: "Apple",
+  },
+  {
+    type: "Vegetable",
+    name: "Broccoli",
+  },
+  {
+    type: "Vegetable",
+    name: "Mushroom",
+  },
+  {
+    type: "Fruit",
+    name: "Banana",
+  },
+  {
+    type: "Vegetable",
+    name: "Tomato",
+  },
+  {
+    type: "Fruit",
+    name: "Orange",
+  },
+  {
+    type: "Fruit",
+    name: "Mango",
+  },
+  {
+    type: "Fruit",
+    name: "Pineapple",
+  },
+  {
+    type: "Vegetable",
+    name: "Cucumber",
+  },
+  {
+    type: "Fruit",
+    name: "Watermelon",
+  },
+  {
+    type: "Vegetable",
+    name: "Carrot",
+  },
+];
 
 export default function Home() {
+  const [products, setProducts] = useState<Array<Item>>(data);
+  const [productSelect, setProductSelect] = useState<Array<Item>>([]);
+  const [notFound, setNotFound] = useState<string>("");
+  const [inputValue, setInputValue] = useState<
+    string | number | readonly string[] | undefined
+  >();
+
+  const [totalData, setTotalData] = useState<number>(0);
+  const [users, setUsers] = useState<Users>([]);
+  const [usersGroup, setUsersGroup] = useState<any>([]);
+
+  function removeAndBackdata(selectItem: Item) {
+    setTimeout(() => {
+      setProductSelect((currentProducts) =>
+        currentProducts.filter((p) => p !== selectItem)
+      );
+      setProducts((oldProduct) => [...oldProduct, selectItem]);
+    }, 5000);
+  }
+
+  function filterProduct() {
+    const found = products.find(
+      (p) => p.name.toLowerCase() === String(inputValue).toLowerCase()
+    );
+
+    if (found) {
+      setNotFound("");
+      setProducts((currentProducts) =>
+        currentProducts.filter((p) => p !== found)
+      );
+      setProductSelect((prevProducts) => [...prevProducts, found]);
+      removeAndBackdata(found);
+    } else {
+      setNotFound("Not found product.");
+    }
+  }
+
+  function groupBy(objectArray: any, property: string, subProperty?: string) {
+    return objectArray.reduce(function (acc: any, obj: any) {
+      if (subProperty) {
+        var key = obj[property][subProperty];
+      } else {
+        var key = obj[property];
+      }
+      if (!acc[key]) {
+        acc[key] = [];
+      }
+      acc[key].push(obj);
+      return acc;
+    }, {});
+  }
+
+  function findingMode() {}
+
+  function summaryBy(objectArray: Users, objProp: any) {
+    const maleCount = objectArray.filter(
+      (p) => p.gender.toLowerCase() === "male"
+    ).length;
+    const femaleCount = objectArray.filter(
+      (p) => p.gender.toLowerCase() === "female"
+    ).length;
+
+    const max = objectArray.reduce(function (prev, current) {
+      return prev && prev.age > current.age ? prev : current;
+    });
+
+    const min = objectArray.reduce(function (prev, current) {
+      return prev && prev.age < current.age ? prev : current;
+    });
+
+    const hairGroup = groupBy(objectArray, "hair", "color");
+
+    let hairObj = Object.keys(hairGroup).map((item) => {
+      return { [item]: hairGroup[item].length };
+    });
+
+    console.log(hairObj, "xxx");
+
+    // var total = 0;
+    // for (var i = 0; i < objectArray.length; i++) {
+    //   total += objectArray[i].age;
+    // }
+    // var avg = total / objectArray.length;
+
+    let dataSummary = {
+      male: maleCount,
+      female: femaleCount,
+      ageRange: `${min.age}-${max.age}`,
+    };
+
+    console.log(dataSummary);
+  }
+
+  function groupUsers() {
+    let temp = groupBy(users, "company", "department");
+    // let summary = Object.keys(temp).map((item) => {
+    //     return summaryBy(item)
+    // });
+
+    Object.keys(temp).map((item) => {
+      summaryBy(temp[item], item);
+    });
+
+    // console.log(temp);
+    // setUsersGroup(temp);
+  }
+
+  async function paginationData() {
+    try {
+      const response = await axios.get(
+        `https://dummyjson.com/users?skip=${users.length}`
+      );
+
+      if (response.status == 200) {
+        let temp = users.concat(response.data.users);
+        setUsers(temp);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  async function fetchData() {
+    try {
+      const response = await axios.get("https://dummyjson.com/users");
+
+      if (response.status == 200) {
+        setTotalData(response.data.total);
+        setUsers(response.data.users);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    if (totalData > users?.length) {
+      paginationData();
+    }
+  }, [users]);
+
+  useEffect(() => {
+    console.log(usersGroup);
+  }, [usersGroup]);
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+    <main className="min-h-screen w-full flex flex-col justify-center  px-5 md:px-10 xl:px-0 py-10 bg-slate-50">
+      <div className="max-w-[1440px] w-full md:min-h-[80vh] h-full grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="w-full p-4 flex flex-wrap  md:flex-col gap-2 h-fit">
+          {products ? (
+            products.map((item, index) => (
+              <button
+                key={index}
+                type="button"
+                onClick={() => setInputValue(item.name)}
+                className="bg-white rounded-md shadow px-4 py-2 text-center text-black focus:shadow-md w-fit md:w-full h-fit"
+              >
+                {item.name}
+              </button>
+            ))
+          ) : (
+            <p>ไม่มีรายการ</p>
+          )}
+        </div>
+
+        <div className="w-full p-4 flex flex-col gap-2 md:col-span-4">
+          <div className="w-full h-fit flex items-end  gap-2  ">
+            <label
+              htmlFor="product"
+              className=" flex flex-col w-full flex-1 gap-1"
+            >
+              Select Product
+              <input
+                type="text"
+                onChange={(event) => setInputValue(event.target.value)}
+                value={inputValue}
+                className="w-full h-fit border rounded-md px-4 py-2 outline-none "
+              />
+            </label>
+
+            <button
+              type="button"
+              onClick={filterProduct}
+              className="w-fit h-fit rounded-md drop-shadow px-4 py-2 text-center shrink-0 min-w-[120px] bg-blue-500 text-white hover:brightness-105 duration-200 -translate-y-[2px]"
+            >
+              ENTER
+            </button>
+          </div>
+
+          {notFound != "" ? <p className="text-red-400">{notFound}</p> : null}
+
+          <div className="w-full h-full grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="w-full h-full border shadow bg-white flex flex-col rounded-md overflow-hidden">
+              <div className="w-full text-center bg-red-400 px-4 py-2 flex items-center justify-center gap-2">
+                <p className="text-white">Fruits</p>
+                <div className="w-6 h-6 relative">
+                  <Image
+                    src={"/assets/fruit_3194591.svg"}
+                    alt="fruit"
+                    sizes="100vw"
+                    width="0"
+                    height="0"
+                    style={{ objectFit: "contain", objectPosition: "center" }}
+                    className="w-full h-full"
+                  />
+                </div>
+              </div>
+
+              <div className="p-4 w-full flex flex-col gap-2">
+                {productSelect &&
+                  productSelect
+                    .filter((p) => p.type === "Fruit")
+                    .map((item, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        className="bg-white rounded-md shadow-sm px-4 py-2 text-center text-black focus:shadow-md border w-full"
+                      >
+                        {item.name}
+                      </button>
+                    ))}
+              </div>
+            </div>
+
+            <div className="w-full h-full border shadow bg-white flex flex-col rounded-md overflow-hidden">
+              <div className="w-full text-center bg-red-400 px-4 py-2 flex items-center justify-center gap-2">
+                <p className="text-white">Vegetables</p>
+                <div className="w-6 h-6 relative">
+                  <Image
+                    src={"/assets/vegetable_2153786.svg"}
+                    alt="fruit"
+                    sizes="100vw"
+                    width="0"
+                    height="0"
+                    style={{ objectFit: "contain", objectPosition: "center" }}
+                    className="w-full h-full"
+                  />
+                </div>
+              </div>
+
+              <div className="p-4 w-full flex flex-col gap-2">
+                {productSelect &&
+                  productSelect
+                    .filter((p) => p.type === "Vegetable")
+                    .map((item, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        className="bg-white rounded-md shadow-sm px-4 py-2 text-center text-black focus:shadow-md border w-full"
+                      >
+                        {item.name}
+                      </button>
+                    ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
+      <div className="max-w-[1440px] w-full md:min-h-[80vh] h-full  gap-4 bg-white rounded-md border p-5">
+        <button
+          type="button"
+          onClick={groupUsers}
+          disabled={totalData != users.length}
+          className="w-fit h-fit rounded-md drop-shadow px-4 py-2 text-center shrink-0 min-w-[120px] bg-blue-500 text-white hover:brightness-105 duration-200 -translate-y-[2px] disabled:grayscale"
         >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
+          {totalData != users.length ? "Fetching.." : "Summary Data"}
+        </button>
       </div>
     </main>
-  )
+  );
 }
