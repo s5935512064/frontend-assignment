@@ -151,18 +151,20 @@ export default function Home() {
 
     const initialAge: number[] = [];
     objectArray.map((item) => initialAge.push(item.age));
-
-    console.log(initialAge);
-
     const modeAge = findingMode(initialAge);
 
-    // const hairGroup = groupBy(objectArray, "hair", "color");
-
-    // let hairObj = Object.keys(hairGroup).map((item) => {
-    //   return { [item]: hairGroup[item].length };
-    // });
-
-    // console.log(hairObj, "xxx");
+    const hairGroup = groupBy(objectArray, "hair", "color");
+    const hairObj = Object.keys(hairGroup).reduce(function (
+      acc: any,
+      obj: any
+    ) {
+      var key = obj;
+      if (!acc[key]) {
+        acc[key] = hairGroup[obj].length;
+      }
+      return acc;
+    },
+    {});
 
     // var total = 0;
     // for (var i = 0; i < objectArray.length; i++) {
@@ -175,6 +177,7 @@ export default function Home() {
       female: femaleCount,
       ageRange: `${min.age}-${max.age}`,
       ageMode: modeAge,
+      hair: hairObj,
     };
 
     console.log(dataSummary);
