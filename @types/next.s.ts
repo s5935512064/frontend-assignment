@@ -56,4 +56,12 @@ declare global {
   }
 
   interface Users extends Array<User> {}
+
+  interface userSummary {
+    male: number;
+    female: number;
+    ageRange: string;
+    hair: object;
+    addressUser: object;
+  }
 }

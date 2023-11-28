@@ -65,7 +65,7 @@ export default function Home() {
 
   const [totalData, setTotalData] = useState<number>(0);
   const [users, setUsers] = useState<Users>([]);
-  const [usersGroup, setUsersGroup] = useState<any>([]);
+  const [usersGroup, setUsersGroup] = useState<Array<userSummary>>();
 
   function removeAndBackdata(selectItem: Item) {
     setTimeout(() => {
@@ -133,7 +133,7 @@ export default function Home() {
     return currentStreak > bestStreak ? currentElem : bestElem;
   }
 
-  function summaryBy(objectArray: Users, objProp: any) {
+  function summaryBy(objectArray: Users) {
     const maleCount = objectArray.filter(
       (p) => p.gender.toLowerCase() === "male"
     ).length;
@@ -166,11 +166,17 @@ export default function Home() {
     },
     {});
 
-    // var total = 0;
-    // for (var i = 0; i < objectArray.length; i++) {
-    //   total += objectArray[i].age;
-    // }
-    // var avg = total / objectArray.length;
+    const userObj = Object.keys(objectArray).reduce(function (
+      acc: any,
+      obj: any
+    ) {
+      var key = objectArray[obj].firstName + objectArray[obj].lastName;
+      if (!acc[obj]) {
+        acc[key] = objectArray[obj].address.postalCode;
+      }
+      return acc;
+    },
+    {});
 
     let dataSummary = {
       male: maleCount,
@@ -178,23 +184,29 @@ export default function Home() {
       ageRange: `${min.age}-${max.age}`,
       ageMode: modeAge,
       hair: hairObj,
+      addressUser: userObj,
     };
 
-    console.log(dataSummary);
+    return dataSummary;
   }
 
   function groupUsers() {
-    let temp = groupBy(users, "company", "department");
-    // let summary = Object.keys(temp).map((item) => {
-    //     return summaryBy(item)
-    // });
+    let temp_data = groupBy(users, "company", "department");
 
-    Object.keys(temp).map((item) => {
-      summaryBy(temp[item], item);
-    });
+    let objDataWithSummary = Object.keys(temp_data).reduce(function (
+      acc: any,
+      obj: any
+    ) {
+      var key = obj;
+      let objByDepartment = summaryBy(temp_data[obj]);
+      if (!acc[key]) {
+        acc[key] = objByDepartment;
+      }
+      return acc;
+    },
+    {});
 
-    // console.log(temp);
-    // setUsersGroup(temp);
+    setUsersGroup(objDataWithSummary);
   }
 
   async function paginationData() {
@@ -235,12 +247,8 @@ export default function Home() {
     }
   }, [users]);
 
-  useEffect(() => {
-    console.log(usersGroup);
-  }, [usersGroup]);
-
   return (
-    <main className="min-h-screen w-full flex flex-col justify-center  px-5 md:px-10 xl:px-0 py-10 bg-slate-50">
+    <main className="min-h-screen w-full flex flex-col justify-center items-center  px-5 md:px-10 xl:px-0 py-10 bg-slate-50">
       <div className="max-w-[1440px] w-full md:min-h-[80vh] h-full grid grid-cols-1 md:grid-cols-5 gap-4">
         <div className="w-full p-4 flex flex-wrap  md:flex-col gap-2 h-fit">
           {products ? (
@@ -259,7 +267,7 @@ export default function Home() {
           )}
         </div>
 
-        <div className="w-full p-4 flex flex-col gap-2 md:col-span-4">
+        <div className="w-full py-4 flex flex-col gap-2 md:col-span-4">
           <div className="w-full h-fit flex items-end  gap-2  ">
             <label
               htmlFor="product"
@@ -362,6 +370,14 @@ export default function Home() {
         >
           {totalData != users.length ? "Fetching.." : "Summary Data"}
         </button>
+
+        {usersGroup && (
+          <pre className="mt-2 w-[292px] sm:w-[340px] rounded-md bg-[#18191A] p-4">
+            <code className="text-white">
+              {JSON.stringify(usersGroup, null, 2)}
+            </code>
+          </pre>
+        )}
       </div>
     </main>
   );
